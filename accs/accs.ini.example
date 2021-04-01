@@ -1,0 +1,31 @@
+[conf]
+host = 
+port = 
+public_key_file = 
+
+[compute]
+recordId =  
+orderId = 
+specId = 
+vCpu = 
+ram = 
+requester = 
+startTime = 
+startDate = 
+endDate = 
+endTime = 
+duration = 
+state = 
+
+[volume]
+recordId =  
+orderId = 
+specId = 
+size = 
+requester = 
+startTime = 
+startDate = 
+endDate = 
+endTime = 
+duration = 
+state = 
