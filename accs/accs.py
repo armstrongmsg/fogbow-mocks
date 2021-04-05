@@ -1,9 +1,14 @@
 from flask import Flask
+from datetime import datetime
 
 import json
 import jsonpickle
 import sys
 import configparser
+
+
+REQUEST_TIME_FORMAT = "%Y-%m-%d"
+RESPONSE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.000+00:00"
 
 
 class Compute_Spec:
@@ -12,15 +17,18 @@ class Compute_Spec:
         self.vCpu = vCpu
         self.ram = ram
 
+
 class Network_Spec:
     def __init__(self, id, cidr):
         self.id = id
         self.cird = cidr
 
+
 class Volume_Spec:
     def __init__(self, id, size):
         self.id = id
         self.size = size
+
 
 class Record:
     def __init__(self, id, orderId, resourceType, spec, requester, startTime, startDate, endDate, endTime, duration, state):
@@ -36,27 +44,58 @@ class Record:
         self.duration = duration
         self.state = state
 
+
 class ACCSMock:
 
     def __init__(self):
         self.config = configparser.ConfigParser()
         self.config.read("accs.ini")
 
-    def _get_compute_usage(self, user_id, requester_id, provider_id, start_date, end_date):
-        recordId = int(self.config["compute"]["recordId"])
-        orderId = self.config["compute"]["orderId"]
-        specId = int(self.config["compute"]["specId"])
-        vCpu = int(self.config["compute"]["vCpu"])
-        ram = int(self.config["compute"]["ram"])
-        requester = self.config["compute"]["requester"]
-        startTime = self.config["compute"]["startTime"]
-        startDate = self.config["compute"]["startDate"]
-        endDate = self.config["compute"]["endDate"]
-        endTime = self.config["compute"]["endTime"]
-        duration = int(self.config["compute"]["duration"])
-        state = self.config["compute"]["state"]
+    def get_user_usage(self, user_id, requester_id, provider_id, resource, start_date, end_date):
+        usage = None
 
-        r = {
+        if resource == "compute":
+            usage = self._get_compute_usage(user_id, requester_id, provider_id, start_date, end_date)
+        elif resource == "volume":
+            usage = self._get_volume_usage(user_id, requester_id, provider_id, start_date, end_date)
+
+        return jsonpickle.encode(usage)
+
+    def _get_compute_usage(self, user_id, requester_id, provider_id, start_date, end_date):
+        compute_usage = []
+
+        for compute_conf_label in self.config["conf"]["compute_conf_labels"].split(","):
+            conf = self._get_compute_conf(compute_conf_label, user_id, requester_id, provider_id, start_date, end_date)
+            compute_usage.append(conf)
+        
+        return compute_usage
+
+    def _get_compute_conf(self, compute_conf_label, user_id, requester_id, provider_id, start_date, end_date):
+        state = self.config[compute_conf_label]["state"]
+        duration = int(self.config[compute_conf_label]["duration"])
+        recordId = int(self.config[compute_conf_label]["recordId"])
+        orderId = self.config[compute_conf_label]["orderId"]
+        specId = int(self.config[compute_conf_label]["specId"])
+        vCpu = int(self.config[compute_conf_label]["vCpu"])
+        ram = int(self.config[compute_conf_label]["ram"])
+        requester = self.config[compute_conf_label]["requester"]
+
+        if state == "FULFILLED":
+            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp() - 5
+            start_timestamp = end_timestamp - duration
+            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            startDate = startTime
+            endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            endDate = endTime
+        else:
+            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
+            start_timestamp = end_timestamp - duration
+            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            startDate = startTime
+            endTime = None
+            endDate = None
+
+        conf = {
                 "id": recordId, 
                 "orderId": orderId,
                 "resourceType": "compute",
@@ -73,23 +112,43 @@ class ACCSMock:
                 "duration": duration,
                 "state": state
             }
-        
-        return r
+
+        return conf
 
     def _get_volume_usage(self, user_id, requester_id, provider_id, start_date, end_date):
-        recordId = int(self.config["volume"]["recordId"])
-        orderId = self.config["volume"]["orderId"]
-        specId = int(self.config["volume"]["specId"])
-        size = int(self.config["volume"]["size"])
-        requester = self.config["volume"]["requester"]
-        startTime = self.config["volume"]["startTime"]
-        startDate = self.config["volume"]["startDate"]
-        endDate = self.config["volume"]["endDate"]
-        endTime = self.config["volume"]["endTime"]
-        duration = int(self.config["volume"]["duration"])
-        state = self.config["volume"]["state"]
+        volume_usage = []
 
-        r = {
+        for volume_conf_label in self.config["conf"]["volume_conf_labels"].split(","):
+            conf = self._get_volume_conf(volume_conf_label, user_id, requester_id, provider_id, start_date, end_date)
+            volume_usage.append(conf)
+        
+        return volume_usage
+
+    def _get_volume_conf(self, volume_conf_label, user_id, requester_id, provider_id, start_date, end_date):
+        state = self.config[volume_conf_label]["state"]
+        duration = int(self.config[volume_conf_label]["duration"])
+        recordId = int(self.config[volume_conf_label]["recordId"])
+        orderId = self.config[volume_conf_label]["orderId"]
+        specId = int(self.config[volume_conf_label]["specId"])
+        size = int(self.config[volume_conf_label]["size"])
+        requester = self.config[volume_conf_label]["requester"]
+
+        if state == "FULFILLED":
+            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp() - 5
+            start_timestamp = end_timestamp - duration
+            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            startDate = startTime
+            endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            endDate = endTime
+        else:
+            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
+            start_timestamp = end_timestamp - duration
+            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            startDate = startTime
+            endTime = None
+            endDate = None
+
+        conf = {
                 "id": recordId, 
                 "orderId": orderId,
                 "resourceType": "volume",
@@ -106,17 +165,7 @@ class ACCSMock:
                 "state": state
             }
 
-        return r
-
-    def get_user_usage(self, user_id, requester_id, provider_id, resource, start_date, end_date):
-        r = None
-
-        if resource == "compute":
-            r = self._get_compute_usage(user_id, requester_id, provider_id, start_date, end_date)
-        elif resource == "volume":
-            r = self._get_volume_usage(user_id, requester_id, provider_id, start_date, end_date)
-
-        return jsonpickle.encode([r])
+        return conf
 
     def get_public_key(self):
         key_file_name = self.config["conf"]["public_key_file"]

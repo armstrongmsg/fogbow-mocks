@@ -2,9 +2,11 @@
 host = 
 port = 
 public_key_file = 
+compute_conf_labels = 
+volume_conf_labels = 
 
 [compute]
-recordId =  
+recordId = 
 orderId = 
 specId = 
 vCpu = 
@@ -18,7 +20,7 @@ duration =
 state = 
 
 [volume]
-recordId =  
+recordId = 
 orderId = 
 specId = 
 size = 
