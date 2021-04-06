@@ -179,14 +179,14 @@ class ACCSMock:
         return jsonpickle.encode(c)
 
 app = Flask(__name__)
-m = ACCSMock()
+accs_mock = ACCSMock()
 
 @app.route('/accs/usage/<user_id>/<requester_id>/<provider_id>/<resource>/<start_date>/<end_date>', methods = ['GET'])
 def get_user_usage(user_id, requester_id, provider_id, resource, start_date, end_date):
-    return m.get_user_usage(user_id, requester_id, provider_id, resource, start_date, end_date),200
+    return accs_mock.get_user_usage(user_id, requester_id, provider_id, resource, start_date, end_date),200
 
 @app.route('/accs/publicKey', methods = ['GET'])
 def get_public_key():
-    return m.get_public_key(),200
+    return accs_mock.get_public_key(),200
 
 app.run(host=sys.argv[1], port=sys.argv[2], debug=True)
