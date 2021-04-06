@@ -81,8 +81,11 @@ class ACCSMock:
         requester = self.config[compute_conf_label]["requester"]
 
         if state == "FULFILLED":
-            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp() - 5
+            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
+            start_timestamp = datetime.strptime(start_date, REQUEST_TIME_FORMAT).timestamp()
+            end_timestamp = end_timestamp - (end_timestamp - start_timestamp)/2.0
             start_timestamp = end_timestamp - duration
+            
             startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
             startDate = startTime
             endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
@@ -112,7 +115,7 @@ class ACCSMock:
                 "duration": duration,
                 "state": state
             }
-
+        print(conf)
         return conf
 
     def _get_volume_usage(self, user_id, requester_id, provider_id, start_date, end_date):
@@ -134,8 +137,11 @@ class ACCSMock:
         requester = self.config[volume_conf_label]["requester"]
 
         if state == "FULFILLED":
-            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp() - 5
+            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
+            start_timestamp = datetime.strptime(start_date, REQUEST_TIME_FORMAT).timestamp()
+            end_timestamp = end_timestamp - (end_timestamp - start_timestamp)/2.0
             start_timestamp = end_timestamp - duration
+
             startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
             startDate = startTime
             endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
@@ -165,6 +171,7 @@ class ACCSMock:
                 "state": state
             }
 
+        print(conf)
         return conf
 
     def get_public_key(self):

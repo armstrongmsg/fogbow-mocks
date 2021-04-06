@@ -29,12 +29,12 @@ class RASMock:
 app = Flask(__name__)
 ras_mock = RASMock()
 
-@app.route('/ras/compute/pause/<user_id>', methods = ['POST'])
+@app.route('/ras/computes/pause/<user_id>', methods = ['POST'])
 def pause_user_resources(user_id):
     ras_mock.pause_user_resources(user_id)
     return "",200
 
-@app.route('/ras/compute/resume/<user_id>', methods = ['POST'])
+@app.route('/ras/computes/resume/<user_id>', methods = ['POST'])
 def resume_user_resources(user_id):
     ras_mock.resume_user_resources(user_id)
     return "",200
