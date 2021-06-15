@@ -16,6 +16,9 @@ class RASMock:
 
     def resume_user_resources(self, user_id):
         pass
+
+    def purge_user(self, user_id, provider):
+        pass
     
     def get_public_key(self):
         key_file_name = self.config["conf"]["public_key_file"]
@@ -37,6 +40,11 @@ def pause_user_resources(user_id):
 @app.route('/ras/computes/resume/<user_id>', methods = ['POST'])
 def resume_user_resources(user_id):
     ras_mock.resume_user_resources(user_id)
+    return "",200
+
+@app.route('/ras/admin/purge/<user_id>/<provider>', methods = ['DELETE'])
+def purge_user(user_id, provider):
+    ras_mock.purge_user(user_id, provider)
     return "",200
 
 @app.route('/ras/publicKey', methods = ['GET'])

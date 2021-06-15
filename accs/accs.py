@@ -5,7 +5,8 @@ import json
 import jsonpickle
 import sys
 import configparser
-
+import time
+import os
 
 REQUEST_TIME_FORMAT = "%Y-%m-%d"
 RESPONSE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.000+00:00"
@@ -91,10 +92,13 @@ class ACCSMock:
             endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
             endDate = endTime
         else:
+            os.environ['TZ'] = 'America/Recife'
+            end = time.time()
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
-            start_timestamp = end_timestamp - duration
+            start_timestamp = end - duration
             startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
             startDate = startTime
+
             endTime = None
             endDate = None
 
@@ -115,7 +119,7 @@ class ACCSMock:
                 "duration": duration,
                 "state": state
             }
-        print(conf)
+        
         return conf
 
     def _get_volume_usage(self, user_id, requester_id, provider_id, start_date, end_date):
@@ -171,7 +175,6 @@ class ACCSMock:
                 "state": state
             }
 
-        print(conf)
         return conf
 
     def get_public_key(self):
