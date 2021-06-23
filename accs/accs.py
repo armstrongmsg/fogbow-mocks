@@ -62,6 +62,16 @@ class ACCSMock:
 
         return jsonpickle.encode(usage)
 
+    def get_all_resources_user_usage(self, user_id, requester_id, provider_id, start_date, end_date):
+        compute_usage = self._get_compute_usage(user_id, requester_id, provider_id, start_date, end_date)
+        volume_usage = self._get_volume_usage(user_id, requester_id, provider_id, start_date, end_date)
+
+        usage = []
+        usage.extend(compute_usage)
+        usage.extend(volume_usage)
+
+        return jsonpickle.encode(usage)
+
     def _get_compute_usage(self, user_id, requester_id, provider_id, start_date, end_date):
         compute_usage = []
 
@@ -194,6 +204,10 @@ accs_mock = ACCSMock()
 @app.route('/accs/usage/<user_id>/<requester_id>/<provider_id>/<resource>/<start_date>/<end_date>', methods = ['GET'])
 def get_user_usage(user_id, requester_id, provider_id, resource, start_date, end_date):
     return accs_mock.get_user_usage(user_id, requester_id, provider_id, resource, start_date, end_date),200
+
+@app.route('/accs/usage/<user_id>/<requester_id>/<provider_id>/<start_date>/<end_date>', methods = ['GET'])
+def get_all_resources_user_usage(user_id, requester_id, provider_id, start_date, end_date):
+    return accs_mock.get_all_resources_user_usage(user_id, requester_id, provider_id, start_date, end_date),200
 
 @app.route('/accs/publicKey', methods = ['GET'])
 def get_public_key():
