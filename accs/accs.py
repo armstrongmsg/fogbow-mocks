@@ -8,7 +8,7 @@ import configparser
 import time
 import os
 
-REQUEST_TIME_FORMAT = "%Y-%m-%d"
+REQUEST_TIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 RESPONSE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.000+00:00"
 
 
@@ -65,10 +65,12 @@ class ACCSMock:
     def get_all_resources_user_usage(self, user_id, requester_id, provider_id, start_date, end_date):
         compute_usage = self._get_compute_usage(user_id, requester_id, provider_id, start_date, end_date)
         volume_usage = self._get_volume_usage(user_id, requester_id, provider_id, start_date, end_date)
+        network_usage = self._get_network_usage(user_id, requester_id, provider_id, start_date, end_date)
 
         usage = []
         usage.extend(compute_usage)
         usage.extend(volume_usage)
+        usage.extend(network_usage)
 
         return jsonpickle.encode(usage)
 
@@ -135,20 +137,20 @@ class ACCSMock:
     def _get_volume_usage(self, user_id, requester_id, provider_id, start_date, end_date):
         volume_usage = []
 
-        for volume_conf_label in self.config["conf"]["volume_conf_labels"].split(","):
-            conf = self._get_volume_conf(volume_conf_label, user_id, requester_id, provider_id, start_date, end_date)
+        for network_conf_label in self.config["conf"]["volume_conf_labels"].split(","):
+            conf = self._get_volume_conf(network_conf_label, user_id, requester_id, provider_id, start_date, end_date)
             volume_usage.append(conf)
         
         return volume_usage
 
-    def _get_volume_conf(self, volume_conf_label, user_id, requester_id, provider_id, start_date, end_date):
-        state = self.config[volume_conf_label]["state"]
-        duration = int(self.config[volume_conf_label]["duration"])
-        recordId = int(self.config[volume_conf_label]["recordId"])
-        orderId = self.config[volume_conf_label]["orderId"]
-        specId = int(self.config[volume_conf_label]["specId"])
-        size = int(self.config[volume_conf_label]["size"])
-        requester = self.config[volume_conf_label]["requester"]
+    def _get_volume_conf(self, network_conf_label, user_id, requester_id, provider_id, start_date, end_date):
+        state = self.config[network_conf_label]["state"]
+        duration = int(self.config[network_conf_label]["duration"])
+        recordId = int(self.config[network_conf_label]["recordId"])
+        orderId = self.config[network_conf_label]["orderId"]
+        specId = int(self.config[network_conf_label]["specId"])
+        size = int(self.config[network_conf_label]["size"])
+        requester = self.config[network_conf_label]["requester"]
 
         if state == "FULFILLED":
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
@@ -175,6 +177,63 @@ class ACCSMock:
                 "spec": {
                             "id": specId, 
                             "size":size
+                        },
+                "requester": requester,
+                "startTime": startTime,
+                "startDate": startDate,
+                "endDate": endDate,
+                "endTime": endTime,
+                "duration": duration,
+                "state": state
+            }
+
+        return conf
+
+    def _get_network_usage(self, user_id, requester_id, provider_id, start_date, end_date):
+        network_usage = []
+
+        for network_conf_label in self.config["conf"]["network_conf_labels"].split(","):
+            conf = self._get_network_conf(network_conf_label, user_id, requester_id, provider_id, start_date, end_date)
+            network_usage.append(conf)
+        
+        return network_usage
+
+    def _get_network_conf(self, network_conf_label, user_id, requester_id, provider_id, start_date, end_date):
+        state = self.config[network_conf_label]["state"]
+        duration = int(self.config[network_conf_label]["duration"])
+        recordId = int(self.config[network_conf_label]["recordId"])
+        orderId = self.config[network_conf_label]["orderId"]
+        specId = int(self.config[network_conf_label]["specId"])
+        cidr = self.config[network_conf_label]["cidr"]
+        allocation_mode = self.config[network_conf_label]["allocation_mode"]
+        requester = self.config[network_conf_label]["requester"]
+
+        if state == "FULFILLED":
+            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
+            start_timestamp = datetime.strptime(start_date, REQUEST_TIME_FORMAT).timestamp()
+            end_timestamp = end_timestamp - (end_timestamp - start_timestamp)/2.0
+            start_timestamp = end_timestamp - duration
+
+            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            startDate = startTime
+            endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            endDate = endTime
+        else:
+            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
+            start_timestamp = end_timestamp - duration
+            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            startDate = startTime
+            endTime = None
+            endDate = None
+
+        conf = {
+                "id": recordId, 
+                "orderId": orderId,
+                "resourceType": "network",
+                "spec": {
+                            "id": specId, 
+                            "cidr":cidr,
+                            "allocationMode":allocation_mode
                         },
                 "requester": requester,
                 "startTime": startTime,
