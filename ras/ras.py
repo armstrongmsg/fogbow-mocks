@@ -11,10 +11,10 @@ class RASMock:
         self.config = configparser.ConfigParser()
         self.config.read("ras.ini")
 
-    def pause_user_resources(self, user_id):
+    def pause_user_resources(self, user_id, provider):
         pass
 
-    def resume_user_resources(self, user_id):
+    def resume_user_resources(self, user_id, provider):
         pass
 
     def purge_user(self, user_id, provider):
@@ -32,14 +32,14 @@ class RASMock:
 app = Flask(__name__)
 ras_mock = RASMock()
 
-@app.route('/ras/computes/pause/<user_id>', methods = ['POST'])
-def pause_user_resources(user_id):
-    ras_mock.pause_user_resources(user_id)
+@app.route('/ras/computes/pause/<user_id>/<provider>', methods = ['POST'])
+def pause_user_resources(user_id, provider):
+    ras_mock.pause_user_resources(user_id, provider)
     return "",200
 
-@app.route('/ras/computes/resume/<user_id>', methods = ['POST'])
-def resume_user_resources(user_id):
-    ras_mock.resume_user_resources(user_id)
+@app.route('/ras/computes/resume/<user_id>/<provider>', methods = ['POST'])
+def resume_user_resources(user_id, provider):
+    ras_mock.resume_user_resources(user_id, provider)
     return "",200
 
 @app.route('/ras/admin/purge/<user_id>/<provider>', methods = ['DELETE'])
