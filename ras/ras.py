@@ -14,6 +14,12 @@ class RASMock:
     def pause_user_resources(self, user_id, provider):
         pass
 
+    def hibernate_user_resources(self, user_id, provider):
+        pass
+
+    def stop_user_resources(self, user_id, provider):
+        pass
+
     def resume_user_resources(self, user_id, provider):
         pass
 
@@ -35,6 +41,16 @@ ras_mock = RASMock()
 @app.route('/ras/computes/pause/<user_id>/<provider>', methods = ['POST'])
 def pause_user_resources(user_id, provider):
     ras_mock.pause_user_resources(user_id, provider)
+    return "",200
+
+@app.route('/ras/computes/hibernate/<user_id>/<provider>', methods = ['POST'])
+def hibernate_user_resources(user_id, provider):
+    ras_mock.hibernate_user_resources(user_id, provider)
+    return "",200
+
+@app.route('/ras/computes/stop/<user_id>/<provider>', methods = ['POST'])
+def stop_user_resources(user_id, provider):
+    ras_mock.stop_user_resources(user_id, provider)
     return "",200
 
 @app.route('/ras/computes/resume/<user_id>/<provider>', methods = ['POST'])
