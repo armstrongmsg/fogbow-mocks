@@ -1,2 +1,9 @@
 [conf]
 public_key_file = 
+
+[response_code]
+pause = 
+hibernate = 
+stop = 
+resume = 
+purge = 
