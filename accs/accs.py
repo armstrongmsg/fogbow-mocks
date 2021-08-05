@@ -92,6 +92,9 @@ class ACCSMock:
         vCpu = int(self.config[compute_conf_label]["vCpu"])
         ram = int(self.config[compute_conf_label]["ram"])
         requester = self.config[compute_conf_label]["requester"]
+        historyId = self.config[compute_conf_label]["history_id"]
+        state_history_1 = self.config[compute_conf_label]["state_history_1"]
+        state_history_2 = self.config[compute_conf_label]["state_history_2"]
 
         if state == "FULFILLED":
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
@@ -103,6 +106,14 @@ class ACCSMock:
             startDate = startTime
             endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
             endDate = endTime
+
+            state_change_interval = (end_timestamp - start_timestamp)/4
+
+            timestamp_state_1 = start_timestamp + state_change_interval
+            timestamp_state_2 = start_timestamp + 2*state_change_interval
+
+            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
+            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
         else:
             os.environ['TZ'] = 'America/Recife'
             end = time.time()
@@ -114,6 +125,14 @@ class ACCSMock:
             endTime = None
             endDate = None
 
+            state_change_interval = (end_timestamp - start_timestamp)/4
+
+            timestamp_state_1 = start_timestamp + state_change_interval
+            timestamp_state_2 = start_timestamp + 2*state_change_interval
+
+            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
+            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
+
         conf = {
                 "id": recordId, 
                 "orderId": orderId,
@@ -122,7 +141,14 @@ class ACCSMock:
                             "id": specId, 
                             "vCpu":vCpu, 
                             "ram":ram
-                        }, 
+                        },
+                "stateHistory": {
+                                    "id": historyId,
+                                    "history": {
+                                                    timestamp_state_1_str: state_history_1,
+                                                    timestamp_state_2_str: state_history_2
+                                               }
+                                },
                 "requester": requester,
                 "startTime": startTime,
                 "startDate": startDate,
@@ -151,6 +177,9 @@ class ACCSMock:
         specId = int(self.config[network_conf_label]["specId"])
         size = int(self.config[network_conf_label]["size"])
         requester = self.config[network_conf_label]["requester"]
+        historyId = self.config[network_conf_label]["history_id"]
+        state_history_1 = self.config[network_conf_label]["state_history_1"]
+        state_history_2 = self.config[network_conf_label]["state_history_2"]
 
         if state == "FULFILLED":
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
@@ -162,6 +191,15 @@ class ACCSMock:
             startDate = startTime
             endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
             endDate = endTime
+
+
+            state_change_interval = (end_timestamp - start_timestamp)/4
+
+            timestamp_state_1 = start_timestamp + state_change_interval
+            timestamp_state_2 = start_timestamp + 2*state_change_interval
+
+            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
+            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
         else:
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
             start_timestamp = end_timestamp - duration
@@ -169,6 +207,15 @@ class ACCSMock:
             startDate = startTime
             endTime = None
             endDate = None
+
+
+            state_change_interval = (end_timestamp - start_timestamp)/4
+
+            timestamp_state_1 = start_timestamp + state_change_interval
+            timestamp_state_2 = start_timestamp + 2*state_change_interval
+
+            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
+            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
 
         conf = {
                 "id": recordId, 
@@ -178,6 +225,13 @@ class ACCSMock:
                             "id": specId, 
                             "size":size
                         },
+                "stateHistory": {
+                                    "id": historyId,
+                                    "history": {
+                                                    timestamp_state_1_str: state_history_1,
+                                                    timestamp_state_2_str: state_history_2
+                                               }
+                                },
                 "requester": requester,
                 "startTime": startTime,
                 "startDate": startDate,
@@ -207,6 +261,9 @@ class ACCSMock:
         cidr = self.config[network_conf_label]["cidr"]
         allocation_mode = self.config[network_conf_label]["allocation_mode"]
         requester = self.config[network_conf_label]["requester"]
+        historyId = self.config[network_conf_label]["history_id"]
+        state_history_1 = self.config[network_conf_label]["state_history_1"]
+        state_history_2 = self.config[network_conf_label]["state_history_2"]
 
         if state == "FULFILLED":
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
@@ -218,6 +275,15 @@ class ACCSMock:
             startDate = startTime
             endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
             endDate = endTime
+
+
+            state_change_interval = (end_timestamp - start_timestamp)/4
+
+            timestamp_state_1 = start_timestamp + state_change_interval
+            timestamp_state_2 = start_timestamp + 2*state_change_interval
+
+            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
+            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
         else:
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
             start_timestamp = end_timestamp - duration
@@ -225,6 +291,15 @@ class ACCSMock:
             startDate = startTime
             endTime = None
             endDate = None
+
+
+            state_change_interval = (end_timestamp - start_timestamp)/4
+
+            timestamp_state_1 = start_timestamp + state_change_interval
+            timestamp_state_2 = start_timestamp + 2*state_change_interval
+
+            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
+            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
 
         conf = {
                 "id": recordId, 
@@ -235,6 +310,13 @@ class ACCSMock:
                             "cidr":cidr,
                             "allocationMode":allocation_mode
                         },
+                "stateHistory": {
+                                    "id": historyId,
+                                    "history": {
+                                                    timestamp_state_1_str: state_history_1,
+                                                    timestamp_state_2_str: state_history_2
+                                               }
+                                },
                 "requester": requester,
                 "startTime": startTime,
                 "startDate": startDate,

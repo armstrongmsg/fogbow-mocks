@@ -4,6 +4,7 @@ port =
 public_key_file = 
 compute_conf_labels = 
 volume_conf_labels = 
+network_conf_labels = 
 
 [compute]
 recordId = 
@@ -18,6 +19,9 @@ endDate =
 endTime = 
 duration = 
 state = 
+history_id = 
+state_history_1 = 
+state_history_2 = 
 
 [volume]
 recordId = 
@@ -31,3 +35,23 @@ endDate =
 endTime = 
 duration = 
 state = 
+history_id = 
+state_history_1 = 
+state_history_2 = 
+
+[network]
+recordId = 
+orderId = 
+specId = 
+cidr = 
+allocation_mode = 
+requester = 
+startTime = 
+startDate = 
+endDate = 
+endTime = 
+duration = 
+state = 
+history_id = 
+state_history_1 = 
+state_history_2 = 
