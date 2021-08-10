@@ -160,23 +160,23 @@ class ACCSMock:
     def _get_volume_usage(self, user_id, requester_id, provider_id, start_date, end_date):
         volume_usage = []
 
-        for network_conf_label in self.config["conf"]["volume_conf_labels"].split(","):
-            conf = self._get_volume_conf(network_conf_label, user_id, requester_id, provider_id, start_date, end_date)
+        for volume_conf_label in self.config["conf"]["volume_conf_labels"].split(","):
+            conf = self._get_volume_conf(volume_conf_label, user_id, requester_id, provider_id, start_date, end_date)
             volume_usage.append(conf)
         
         return volume_usage
 
-    def _get_volume_conf(self, network_conf_label, user_id, requester_id, provider_id, start_date, end_date):
-        state = self.config[network_conf_label]["state"]
-        duration = int(self.config[network_conf_label]["duration"])
-        recordId = int(self.config[network_conf_label]["recordId"])
-        orderId = self.config[network_conf_label]["orderId"]
-        specId = int(self.config[network_conf_label]["specId"])
-        size = int(self.config[network_conf_label]["size"])
-        requester = self.config[network_conf_label]["requester"]
-        historyId = self.config[network_conf_label]["history_id"]
-        state_history_1 = self.config[network_conf_label]["state_history_1"]
-        state_history_2 = self.config[network_conf_label]["state_history_2"]
+    def _get_volume_conf(self, volume_conf_label, user_id, requester_id, provider_id, start_date, end_date):
+        state = self.config[volume_conf_label]["state"]
+        duration = int(self.config[volume_conf_label]["duration"])
+        recordId = int(self.config[volume_conf_label]["recordId"])
+        orderId = self.config[volume_conf_label]["orderId"]
+        specId = int(self.config[volume_conf_label]["specId"])
+        requester = self.config[volume_conf_label]["requester"]
+        historyId = self.config[volume_conf_label]["history_id"]
+        state_history_1 = self.config[volume_conf_label]["state_history_1"]
+        state_history_2 = self.config[volume_conf_label]["state_history_2"]
+        size = int(self.config[volume_conf_label]["size"])
 
         if state == "FULFILLED":
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
