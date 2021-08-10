@@ -18,11 +18,35 @@ class Compute_Spec:
         self.vCpu = vCpu
         self.ram = ram
 
+    def __init__(self, config, label):
+        self.id = int(config[label]["specId"]) 
+        self.vCpu = int(config[label]["vCpu"])
+        self.ram = int(config[label]["ram"])
+
+    def get_repr(self):
+        return {
+                "id": self.id, 
+                "vCpu": self.vCpu, 
+                "ram": self.ram
+                }
+
 
 class Network_Spec:
     def __init__(self, id, cidr):
         self.id = id
         self.cird = cidr
+
+    def __init__(self, config, label):
+        self.id = int(config[label]["specId"])
+        self.cidr = config[label]["cidr"]
+        self.allocation_mode = config[label]["allocation_mode"]
+
+    def get_repr(self):
+        return {
+                "id": self.id, 
+                "cidr": self.cidr,
+                "allocationMode": self.allocation_mode
+                }
 
 
 class Volume_Spec:
@@ -30,20 +54,79 @@ class Volume_Spec:
         self.id = id
         self.size = size
 
+    def __init__(self, config, label):
+        self.id = int(config[label]["specId"])
+        self.size = int(config[label]["size"])
+        
+    def get_repr(self):
+        return {
+                "id": self.id, 
+                "size": self.size
+                }
+
 
 class Record:
-    def __init__(self, id, orderId, resourceType, spec, requester, startTime, startDate, endDate, endTime, duration, state):
+    def __init__(self, id, orderId, resourceType, spec, historyId, state_history_1, state_history_2, 
+    requester, startDate, endDate, duration, state):
         self.id = id
         self.orderId = orderId
         self.resourceType = resourceType
         self.spec = spec
+        self.historyId = historyId
+        self.state_history_1 = state_history_1
+        self.state_history_2 = state_history_2
         self.requester = requester
-        self.startTime = startTime
         self.startDate = startDate
         self.endDate = endDate
-        self.endTime = endTime
         self.duration = duration
         self.state = state
+
+        if state == "CLOSED":
+            end_timestamp = datetime.strptime(self.endDate, REQUEST_TIME_FORMAT).timestamp()
+            start_timestamp = datetime.strptime(self.startDate, REQUEST_TIME_FORMAT).timestamp()
+            end_timestamp = end_timestamp - (end_timestamp - start_timestamp)/2.0
+            start_timestamp = end_timestamp - self.duration
+            self.startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            self.startDate = self.startTime
+            self.endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            self.endDate = endTime
+        else:
+            end_timestamp = datetime.strptime(self.endDate, REQUEST_TIME_FORMAT).timestamp()
+            start_timestamp = end_timestamp - duration
+            self.startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
+            self.startDate = self.startTime
+            self.endTime = None
+            self.endDate = None
+
+        state_change_interval = (end_timestamp - start_timestamp)/4
+
+        timestamp_state_1 = start_timestamp + state_change_interval
+        timestamp_state_2 = start_timestamp + 2*state_change_interval
+
+        self.timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
+        self.timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
+
+    def get_repr(self):
+        return {
+                "id": self.id, 
+                "orderId": self.orderId,
+                "resourceType": self.resourceType,
+                "spec": self.spec,
+                "stateHistory": {
+                                    "id": self.historyId,
+                                    "history": {
+                                                    self.timestamp_state_1_str: self.state_history_1,
+                                                    self.timestamp_state_2_str: self.state_history_2
+                                               }
+                                },
+                "requester": self.requester,
+                "startTime": self.startTime,
+                "startDate": self.startDate,
+                "endDate": self.endDate,
+                "endTime": self.endTime,
+                "duration": self.duration,
+                "state": self.state
+            }
 
 
 class ACCSMock:
@@ -78,252 +161,48 @@ class ACCSMock:
         compute_usage = []
 
         for compute_conf_label in self.config["conf"]["compute_conf_labels"].split(","):
-            conf = self._get_compute_conf(compute_conf_label, user_id, requester_id, provider_id, start_date, end_date)
+            conf = self._get_generic_conf("compute", compute_conf_label, start_date, end_date)
             compute_usage.append(conf)
         
         return compute_usage
-
-    def _get_compute_conf(self, compute_conf_label, user_id, requester_id, provider_id, start_date, end_date):
-        state = self.config[compute_conf_label]["state"]
-        duration = int(self.config[compute_conf_label]["duration"])
-        recordId = int(self.config[compute_conf_label]["recordId"])
-        orderId = self.config[compute_conf_label]["orderId"]
-        specId = int(self.config[compute_conf_label]["specId"])
-        vCpu = int(self.config[compute_conf_label]["vCpu"])
-        ram = int(self.config[compute_conf_label]["ram"])
-        requester = self.config[compute_conf_label]["requester"]
-        historyId = self.config[compute_conf_label]["history_id"]
-        state_history_1 = self.config[compute_conf_label]["state_history_1"]
-        state_history_2 = self.config[compute_conf_label]["state_history_2"]
-
-        if state == "FULFILLED":
-            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
-            start_timestamp = datetime.strptime(start_date, REQUEST_TIME_FORMAT).timestamp()
-            end_timestamp = end_timestamp - (end_timestamp - start_timestamp)/2.0
-            start_timestamp = end_timestamp - duration
-            
-            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            startDate = startTime
-            endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            endDate = endTime
-
-            state_change_interval = (end_timestamp - start_timestamp)/4
-
-            timestamp_state_1 = start_timestamp + state_change_interval
-            timestamp_state_2 = start_timestamp + 2*state_change_interval
-
-            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
-            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
-        else:
-            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
-            start_timestamp = end_timestamp - duration
-            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            startDate = startTime
-            endTime = None
-            endDate = None
-
-            state_change_interval = (end_timestamp - start_timestamp)/4
-
-            timestamp_state_1 = start_timestamp + state_change_interval
-            timestamp_state_2 = start_timestamp + 2*state_change_interval
-
-            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
-            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
-
-        conf = {
-                "id": recordId, 
-                "orderId": orderId,
-                "resourceType": "compute",
-                "spec": {
-                            "id": specId, 
-                            "vCpu":vCpu, 
-                            "ram":ram
-                        },
-                "stateHistory": {
-                                    "id": historyId,
-                                    "history": {
-                                                    timestamp_state_1_str: state_history_1,
-                                                    timestamp_state_2_str: state_history_2
-                                               }
-                                },
-                "requester": requester,
-                "startTime": startTime,
-                "startDate": startDate,
-                "endDate": endDate,
-                "endTime": endTime,
-                "duration": duration,
-                "state": state
-            }
-        
-        return conf
 
     def _get_volume_usage(self, user_id, requester_id, provider_id, start_date, end_date):
         volume_usage = []
 
         for volume_conf_label in self.config["conf"]["volume_conf_labels"].split(","):
-            conf = self._get_volume_conf(volume_conf_label, user_id, requester_id, provider_id, start_date, end_date)
+            conf = self._get_generic_conf("volume", volume_conf_label, start_date, end_date)
             volume_usage.append(conf)
         
         return volume_usage
-
-    def _get_volume_conf(self, volume_conf_label, user_id, requester_id, provider_id, start_date, end_date):
-        state = self.config[volume_conf_label]["state"]
-        duration = int(self.config[volume_conf_label]["duration"])
-        recordId = int(self.config[volume_conf_label]["recordId"])
-        orderId = self.config[volume_conf_label]["orderId"]
-        specId = int(self.config[volume_conf_label]["specId"])
-        requester = self.config[volume_conf_label]["requester"]
-        historyId = self.config[volume_conf_label]["history_id"]
-        state_history_1 = self.config[volume_conf_label]["state_history_1"]
-        state_history_2 = self.config[volume_conf_label]["state_history_2"]
-        size = int(self.config[volume_conf_label]["size"])
-
-        if state == "FULFILLED":
-            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
-            start_timestamp = datetime.strptime(start_date, REQUEST_TIME_FORMAT).timestamp()
-            end_timestamp = end_timestamp - (end_timestamp - start_timestamp)/2.0
-            start_timestamp = end_timestamp - duration
-
-            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            startDate = startTime
-            endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            endDate = endTime
-
-
-            state_change_interval = (end_timestamp - start_timestamp)/4
-
-            timestamp_state_1 = start_timestamp + state_change_interval
-            timestamp_state_2 = start_timestamp + 2*state_change_interval
-
-            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
-            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
-        else:
-            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
-            start_timestamp = end_timestamp - duration
-            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            startDate = startTime
-            endTime = None
-            endDate = None
-
-
-            state_change_interval = (end_timestamp - start_timestamp)/4
-
-            timestamp_state_1 = start_timestamp + state_change_interval
-            timestamp_state_2 = start_timestamp + 2*state_change_interval
-
-            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
-            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
-
-        conf = {
-                "id": recordId, 
-                "orderId": orderId,
-                "resourceType": "volume",
-                "spec": {
-                            "id": specId, 
-                            "size":size
-                        },
-                "stateHistory": {
-                                    "id": historyId,
-                                    "history": {
-                                                    timestamp_state_1_str: state_history_1,
-                                                    timestamp_state_2_str: state_history_2
-                                               }
-                                },
-                "requester": requester,
-                "startTime": startTime,
-                "startDate": startDate,
-                "endDate": endDate,
-                "endTime": endTime,
-                "duration": duration,
-                "state": state
-            }
-
-        return conf
 
     def _get_network_usage(self, user_id, requester_id, provider_id, start_date, end_date):
         network_usage = []
 
         for network_conf_label in self.config["conf"]["network_conf_labels"].split(","):
-            conf = self._get_network_conf(network_conf_label, user_id, requester_id, provider_id, start_date, end_date)
+            conf = self._get_generic_conf("network", network_conf_label, start_date, end_date)
             network_usage.append(conf)
         
         return network_usage
 
-    def _get_network_conf(self, network_conf_label, user_id, requester_id, provider_id, start_date, end_date):
-        state = self.config[network_conf_label]["state"]
-        duration = int(self.config[network_conf_label]["duration"])
-        recordId = int(self.config[network_conf_label]["recordId"])
-        orderId = self.config[network_conf_label]["orderId"]
-        specId = int(self.config[network_conf_label]["specId"])
-        cidr = self.config[network_conf_label]["cidr"]
-        allocation_mode = self.config[network_conf_label]["allocation_mode"]
-        requester = self.config[network_conf_label]["requester"]
-        historyId = self.config[network_conf_label]["history_id"]
-        state_history_1 = self.config[network_conf_label]["state_history_1"]
-        state_history_2 = self.config[network_conf_label]["state_history_2"]
-
-        if state == "FULFILLED":
-            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
-            start_timestamp = datetime.strptime(start_date, REQUEST_TIME_FORMAT).timestamp()
-            end_timestamp = end_timestamp - (end_timestamp - start_timestamp)/2.0
-            start_timestamp = end_timestamp - duration
-
-            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            startDate = startTime
-            endTime = datetime.fromtimestamp(end_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            endDate = endTime
-
-
-            state_change_interval = (end_timestamp - start_timestamp)/4
-
-            timestamp_state_1 = start_timestamp + state_change_interval
-            timestamp_state_2 = start_timestamp + 2*state_change_interval
-
-            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
-            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
+    def _get_generic_conf(self, conf_type, conf_label, start_date, end_date):
+        state = self.config[conf_label]["state"]
+        duration = int(self.config[conf_label]["duration"])
+        recordId = int(self.config[conf_label]["recordId"])
+        orderId = self.config[conf_label]["orderId"]
+        requester = self.config[conf_label]["requester"]
+        historyId = self.config[conf_label]["history_id"]
+        state_history_1 = self.config[conf_label]["state_history_1"]
+        state_history_2 = self.config[conf_label]["state_history_2"]
+        
+        if conf_type == "compute":
+            spec = Compute_Spec(self.config, conf_label).get_repr()
+        elif conf_type == "network":
+            spec = Network_Spec(self.config, conf_label).get_repr()
         else:
-            end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
-            start_timestamp = end_timestamp - duration
-            startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
-            startDate = startTime
-            endTime = None
-            endDate = None
+            spec = Volume_Spec(self.config, conf_label).get_repr()
 
-
-            state_change_interval = (end_timestamp - start_timestamp)/4
-
-            timestamp_state_1 = start_timestamp + state_change_interval
-            timestamp_state_2 = start_timestamp + 2*state_change_interval
-
-            timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
-            timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
-
-        conf = {
-                "id": recordId, 
-                "orderId": orderId,
-                "resourceType": "network",
-                "spec": {
-                            "id": specId, 
-                            "cidr":cidr,
-                            "allocationMode":allocation_mode
-                        },
-                "stateHistory": {
-                                    "id": historyId,
-                                    "history": {
-                                                    timestamp_state_1_str: state_history_1,
-                                                    timestamp_state_2_str: state_history_2
-                                               }
-                                },
-                "requester": requester,
-                "startTime": startTime,
-                "startDate": startDate,
-                "endDate": endDate,
-                "endTime": endTime,
-                "duration": duration,
-                "state": state
-            }
-
-        return conf
+        return Record(recordId, orderId, conf_type, spec, historyId, state_history_1, state_history_2, 
+        requester, start_date, end_date, duration, state).get_repr()
 
     def get_public_key(self):
         key_file_name = self.config["conf"]["public_key_file"]
