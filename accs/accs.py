@@ -115,13 +115,10 @@ class ACCSMock:
             timestamp_state_1_str = datetime.fromtimestamp(timestamp_state_1).strftime(RESPONSE_TIME_FORMAT)
             timestamp_state_2_str = datetime.fromtimestamp(timestamp_state_2).strftime(RESPONSE_TIME_FORMAT)
         else:
-            os.environ['TZ'] = 'America/Recife'
-            end = time.time()
             end_timestamp = datetime.strptime(end_date, REQUEST_TIME_FORMAT).timestamp()
-            start_timestamp = end - duration
+            start_timestamp = end_timestamp - duration
             startTime = datetime.fromtimestamp(start_timestamp).strftime(RESPONSE_TIME_FORMAT)
             startDate = startTime
-
             endTime = None
             endDate = None
 
